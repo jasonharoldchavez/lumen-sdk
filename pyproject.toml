@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lumen-sdk"
 version = "0.4.0"
-description = "Telemetry integrity and forensic audit SDK"
+description = "Lumen SDK: cryptographic ledger verification and Merkle integrity engine"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "aiosqlite"
-]
+
+[tool.setuptools.packages.find]
+include = ["lumen*"]
