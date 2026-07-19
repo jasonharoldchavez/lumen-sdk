@@ -269,6 +269,20 @@ See:
 - COMMERCIAL_LICENSE.md
 - NOTICE
 
+
+## Commercial Use
+
+Lumen SDK is available under a dual license model.
+
+The Apache License 2.0 license supports open source usage.
+
+Commercial licensing is available for organizations requiring:
+- proprietary deployment rights
+- commercial integration terms
+- additional licensing permissions
+
+Contact the project owner for commercial licensing inquiries.
+
 ## Development Status
 
 Active development.
