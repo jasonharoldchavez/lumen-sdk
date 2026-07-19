@@ -235,13 +235,6 @@ It does not provide:
 - Managed hosting
 - Included support services unless separately provided
 
-### v0.6.0
-Added:
-- dual licensing documentation
-- apache 2.0 open source license
-- commercial licensing option
-- contributor and usage terms documentation
-
 ## Licensing
 
 Lumen SDK uses a dual license model.
