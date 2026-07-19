@@ -141,21 +141,17 @@ Lumen SDK has been tested with:
 
 ---
 
-## NASA Telemanom Validation
+## Telemetry Integrity Validation
 
-Public NASA Telemanom telemetry data was used for external validation.
+Lumen SDK was validated using NASA Telemanom telemetry data as an external telemetry source.
 
-Dataset:
+The validation demonstrated:
 
-NASA Telemanom
-
-Channel:
-
-A-1
-
-Samples processed:
-
-8640
+- Telemetry event ingestion
+- Cryptographic event recording
+- Merkle integrity generation
+- Ledger chain verification
+- Forensic audit validation
 
 Result:
 
@@ -164,8 +160,6 @@ Status: VERIFIED
 Manifests processed: 1
 
 Errors: []
-
----
 
 ## Security Model
 
@@ -223,6 +217,23 @@ Added:
 - Editable installation support
 
 ---
+
+## Limitations
+
+Lumen SDK is an integrity verification toolkit.
+
+It provides:
+
+- Data integrity validation
+- Audit verification
+- Tamper detection mechanisms
+
+It does not provide:
+
+- Guaranteed prevention of all attacks
+- Automatic compliance certification
+- Managed hosting
+- Included support services unless separately provided
 
 ## Development Status
 
