@@ -5,3 +5,4 @@ __pycache__/
 *.db-wal
 *.log
 lumen_sdk.egg-info/
+dist/
