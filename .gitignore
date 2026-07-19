@@ -4,3 +4,4 @@ __pycache__/
 *.db-shm
 *.db-wal
 *.log
+lumen_sdk.egg-info/
