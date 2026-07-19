@@ -1,12 +1,23 @@
 from lumen import MerkleTreeEngine
 
+import hashlib
+
+print("=== Lumen SDK Basic Usage ===")
+
 events = [
-    "event_001_hash",
-    "event_002_hash",
-    "event_003_hash"
+    "sensor_event_001",
+    "sensor_event_002",
+    "sensor_event_003",
 ]
 
-root = MerkleTreeEngine.compute_root(events)
+# Convert events into SHA256 leaf hashes
+leaf_hashes = [
+    hashlib.sha256(event.encode()).hexdigest()
+    for event in events
+]
 
-print("Lumen Merkle Root:")
-print(root)
+root = MerkleTreeEngine.compute_root(leaf_hashes)
+
+print("Events:", len(events))
+print("Merkle Root:", root)
+print("Lumen SDK example completed successfully")
