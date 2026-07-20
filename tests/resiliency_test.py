@@ -2,7 +2,7 @@ import asyncio
 import os
 import hashlib
 import sqlite3
-from sqlite_engine import SQLiteLedgerEngine
+from lumen.ledger import SQLiteLedgerEngine
 from verifier import ForensicAuditVerifier
 from merkle import MerkleTreeEngine
 

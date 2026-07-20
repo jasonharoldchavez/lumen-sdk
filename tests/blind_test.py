@@ -4,7 +4,7 @@ import secrets
 import hashlib
 import sqlite3
 import random
-from sqlite_engine import SQLiteLedgerEngine
+from lumen.ledger import SQLiteLedgerEngine
 from verifier import ForensicAuditVerifier
 from merkle import MerkleTreeEngine
 
