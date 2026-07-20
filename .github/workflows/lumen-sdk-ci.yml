@@ -1,0 +1,89 @@
+name: Lumen SDK CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+
+  validate:
+    name: Validate Lumen SDK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade packaging tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Check Python syntax
+        run: |
+          python -m compileall .
+
+      - name: Run tests
+        run: |
+          if [ -d tests ]; then
+            pip install pytest
+            pytest tests
+          else
+            echo "No tests found - validation complete"
+          fi
+
+      - name: Verify SDK structure
+        run: |
+          echo "Checking Lumen SDK files..."
+          find . -maxdepth 2 -type f | sort | head -100
+
+
+  package:
+    name: Build SDK Package
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade build
+
+      - name: Build package
+        run: |
+          if [ -f pyproject.toml ]; then
+            python -m build
+          else
+            echo "No pyproject.toml yet - package build skipped"
+          fi
+
+      - name: Save build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumen-sdk-build
+          path: dist/
+          if-no-files-found: ignore
