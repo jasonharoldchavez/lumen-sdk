@@ -44,8 +44,11 @@ jobs:
       - name: Run tests
         run: |
           if [ -d tests ]; then
-            pip install pytest
-            pytest tests
+            python tests/blind_test.py
+            python tests/chaos_test.py
+            python tests/final_blind_test.py
+            python tests/resiliency_test.py
+            python tests/scale_test.py
           else
             echo "No tests found - validation complete"
           fi
