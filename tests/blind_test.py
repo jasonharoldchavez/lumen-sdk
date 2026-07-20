@@ -5,8 +5,8 @@ import hashlib
 import sqlite3
 import random
 from lumen.ledger import SQLiteLedgerEngine
-from verifier import ForensicAuditVerifier
-from merkle import MerkleTreeEngine
+from lumen.verifier import ForensicAuditVerifier
+from lumen.merkle import MerkleTreeEngine
 
 class EphemeralKeyProvider:
     def __init__(self):

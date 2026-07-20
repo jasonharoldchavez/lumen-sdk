@@ -22,6 +22,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Run tests
+      - name: Run validation suite
         run: |
-          python -m unittest discover
+          python tests/blind_test.py
+          python tests/chaos_test.py
+          python tests/final_blind_test.py
+          python tests/resiliency_test.py
+          python tests/scale_test.py

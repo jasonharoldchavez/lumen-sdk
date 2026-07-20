@@ -3,8 +3,8 @@ import os
 import hashlib
 import sqlite3
 from lumen.ledger import SQLiteLedgerEngine
-from verifier import ForensicAuditVerifier
-from merkle import MerkleTreeEngine
+from lumen.verifier import ForensicAuditVerifier
+from lumen.merkle import MerkleTreeEngine
 
 class StableKeyProvider:
     def __init__(self):
