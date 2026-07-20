@@ -8,6 +8,9 @@ version = "0.5.0"
 description = "Lumen SDK: cryptographic ledger verification and Merkle integrity engine"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "aiosqlite>=0.19.0"
+]
 
 [tool.setuptools.packages.find]
 include = ["lumen*"]
