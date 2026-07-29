@@ -294,3 +294,16 @@ Install:
 Verify:
 
     python -c "import lumen; print("Lumen import OK")"
+
+## Quick Demo
+
+Run:
+
+    python examples/quick_demo.py
+
+Example output:
+
+    Lumen SDK Demo
+    Merkle Root:
+    07c15d587bff44a7c8da8b38a67f5e9d056dbdc929a35ca449092d918c3ad34d
+
