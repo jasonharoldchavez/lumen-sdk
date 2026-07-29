@@ -56,17 +56,13 @@ Lumen SDK includes validation tooling for:
 
 ## Installation
 
-Clone the repository:
+Install from PyPI:
 
-git clone https://github.com/jasonharoldchavez/lumen-sdk.git
+    pip install lumen-sdk
 
-cd lumen-sdk
+For development:
 
-Install:
-
-python3 -m pip install -e .
-
----
+    python3 -m pip install -e .
 
 ## Quick Example
 
