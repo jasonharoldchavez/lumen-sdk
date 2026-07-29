@@ -230,12 +230,6 @@ Added:
 - Verified package installation workflow
 - Prepared release package artifacts
 
-### v0.6.0
-Added:
-- Dual licensing documentation
-- Apache 2.0 open source license
-- Commercial licensing option
-- Contributor and usage terms documentation
 
 ## Limitations
 
