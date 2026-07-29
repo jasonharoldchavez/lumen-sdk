@@ -14,3 +14,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = ["lumen*"]
+
+[tool.pytest.ini_options]
+python_files = ["*_test.py", "test_*.py"]
+testpaths = ["tests", "core"]

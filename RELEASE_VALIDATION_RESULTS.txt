@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform android -- Python 3.13.13, pytest-9.1.1, pluggy-1.6.0 -- /data/data/com.termux/files/usr/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /data/data/com.termux/files/home/lumen-sdk
+configfile: pyproject.toml
+testpaths: tests, core
+plugins: anyio-4.12.1
+collecting ... collected 5 items
+
+tests/test_release_validation.py::test_blind_validation PASSED           [ 20%]
+tests/test_release_validation.py::test_chaos_validation PASSED           [ 40%]
+tests/test_release_validation.py::test_final_blind_validation PASSED     [ 60%]
+tests/test_release_validation.py::test_resiliency_validation PASSED      [ 80%]
+tests/test_release_validation.py::test_scale_validation PASSED           [100%]
+
+============================== 5 passed in 59.33s ==============================
