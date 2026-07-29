@@ -288,3 +288,13 @@ Lumen SDK is being developed as a foundation for verifiable, auditable, integrit
 ## Author
 
 Jason Chavez
+
+## Quick Start
+
+Install:
+
+    pip install lumen-sdk
+
+Verify:
+
+    python -c "import lumen; print("Lumen import OK")"
