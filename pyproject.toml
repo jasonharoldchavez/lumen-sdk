@@ -1,13 +1,15 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lumen-sdk"
 version = "0.5.0"
-description = "Lumen SDK: cryptographic ledger verification and Merkle integrity engine"
+description = "Tamper-evident event ledger and integrity verification toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 dependencies = [
     "aiosqlite>=0.19.0"
 ]
