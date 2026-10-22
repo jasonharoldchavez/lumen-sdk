@@ -9,12 +9,7 @@ description = "Tamper-evident event ledger and integrity verification toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
-classifiers = [
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Operating System :: OS Independent",
-]
+license-files = ["LICENSE", "NOTICE"]
 dependencies = [
     "aiosqlite>=0.19.0"
 ]
