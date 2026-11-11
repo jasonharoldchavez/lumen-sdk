@@ -1,6 +1,7 @@
 import os
 import struct
 import tempfile
+import sqlite3
 import unittest
 
 from lumen.ledger import SQLiteLedgerEngine
@@ -60,6 +61,67 @@ class VerifierRegressionTests(unittest.IsolatedAsyncioTestCase):
         report = await ForensicAuditVerifier(self.engine).verify_complete_ledger_chain()
         self.assertEqual(report["status"], "VERIFIED", report["errors"])
         self.assertEqual(report["manifolds_processed"], 1)
+
+    def inject_orphan_rows(self, tx_id="missing-parent"):
+        # A separate SQLite connection defaults foreign_keys to OFF, matching a
+        # writer that does not explicitly enable connection-local FK enforcement.
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                """
+                INSERT INTO event_journal
+                (tx_id, timestamp, node, metric, version, value, detector_type,
+                 detector_version, metadata, parent_hash, journal_hash,
+                 journal_hmac, key_id, sequence_index)
+                VALUES (?, 1.0, 'orphan-node', 'orphan-metric', 1, X'01',
+                        'test', 'v1', '{}', '0', '1', 'bad', 'test-key', 0)
+                """,
+                (tx_id,),
+            )
+            conn.execute(
+                """
+                INSERT INTO detector_state_history
+                (node, metric, tx_id, version, starting_version, state, state_hmac, key_id)
+                VALUES ('orphan-node', 'orphan-metric', ?, 1, 0, 'NORMAL', 'bad', 'test-key')
+                """,
+                (tx_id,),
+            )
+            conn.execute(
+                """
+                INSERT INTO causal_manifold_journal
+                (tx_id, timestamp, causal_matrix_blob, matrix_rows, matrix_cols,
+                 matrix_dtype, structural_invariance_index, manifold_hash, manifold_hmac, key_id)
+                VALUES (?, 1.0, X'0000000000000000', 1, 1, '>f8', 0.5, 'bad', 'bad', 'test-key')
+                """,
+                (tx_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    async def test_orphan_rows_are_detected_even_when_ledger_has_no_manifests(self):
+        self.inject_orphan_rows()
+        report = await ForensicAuditVerifier(self.engine).verify_complete_ledger_chain()
+        self.assertEqual(report["status"], "CORRUPTED", report["errors"])
+        self.assertEqual(
+            report["orphan_records"],
+            {
+                "event_journal": 1,
+                "detector_state_history": 1,
+                "causal_manifold_journal": 1,
+            },
+        )
+        self.assertEqual(report["manifests_processed"], 0)
+
+    async def test_orphan_rows_are_detected_alongside_valid_manifest(self):
+        await self.add_valid_manifold()
+        self.inject_orphan_rows("missing-parent-with-valid-ledger")
+        report = await ForensicAuditVerifier(self.engine).verify_complete_ledger_chain()
+        self.assertEqual(report["status"], "CORRUPTED", report["errors"])
+        self.assertEqual(report["manifests_processed"], 1)
+        self.assertEqual(report["orphan_records"]["event_journal"], 1)
+        self.assertEqual(report["orphan_records"]["detector_state_history"], 1)
+        self.assertEqual(report["orphan_records"]["causal_manifold_journal"], 1)
 
     async def test_modified_manifold_matrix_is_detected(self):
         tx_id = await self.add_valid_manifold()
