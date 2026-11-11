@@ -64,12 +64,88 @@ class ForensicAuditVerifier:
             "SELECT tx_id, logical_epoch, timestamp_nanos, event_count, state_count, manifest_hash, manifest_hmac, key_id, previous_manifest_hash, merkle_root_hash, crypto_algo, hmac_version, hash_version FROM transaction_manifest ORDER BY logical_epoch ASC"
         )
         manifests = await manifest_cursor.fetchall()
+
+        # Foreign-key enforcement is connection-local in SQLite. A different writer
+        # can therefore leave child records whose transaction manifest is missing.
+        # Check every child table independently, including when the ledger has no
+        # manifests at all; walking only manifest-linked rows cannot find these.
+        orphan_specs = (
+            (
+                "event_journal",
+                """
+                SELECT COUNT(*)
+                FROM event_journal AS child
+                LEFT JOIN transaction_manifest AS parent ON parent.tx_id = child.tx_id
+                WHERE parent.tx_id IS NULL
+                """,
+                """
+                SELECT child.tx_id, COUNT(*)
+                FROM event_journal AS child
+                LEFT JOIN transaction_manifest AS parent ON parent.tx_id = child.tx_id
+                WHERE parent.tx_id IS NULL
+                GROUP BY child.tx_id ORDER BY child.tx_id LIMIT 5
+                """,
+            ),
+            (
+                "detector_state_history",
+                """
+                SELECT COUNT(*)
+                FROM detector_state_history AS child
+                LEFT JOIN transaction_manifest AS parent ON parent.tx_id = child.tx_id
+                WHERE parent.tx_id IS NULL
+                """,
+                """
+                SELECT child.tx_id, COUNT(*)
+                FROM detector_state_history AS child
+                LEFT JOIN transaction_manifest AS parent ON parent.tx_id = child.tx_id
+                WHERE parent.tx_id IS NULL
+                GROUP BY child.tx_id ORDER BY child.tx_id LIMIT 5
+                """,
+            ),
+            (
+                "causal_manifold_journal",
+                """
+                SELECT COUNT(*)
+                FROM causal_manifold_journal AS child
+                LEFT JOIN transaction_manifest AS parent ON parent.tx_id = child.tx_id
+                WHERE parent.tx_id IS NULL
+                """,
+                """
+                SELECT child.tx_id, COUNT(*)
+                FROM causal_manifold_journal AS child
+                LEFT JOIN transaction_manifest AS parent ON parent.tx_id = child.tx_id
+                WHERE parent.tx_id IS NULL
+                GROUP BY child.tx_id ORDER BY child.tx_id LIMIT 5
+                """,
+            ),
+        )
+        for table_name, count_sql, sample_sql in orphan_specs:
+            count_cursor = await self.storage._read_conn.execute(count_sql)
+            count_row = await count_cursor.fetchone()
+            orphan_count = int(count_row[0]) if count_row else 0
+            if orphan_count:
+                sample_cursor = await self.storage._read_conn.execute(sample_sql)
+                samples = await sample_cursor.fetchall()
+                report["status"] = "CORRUPTED"
+                report.setdefault("orphan_records", {})[table_name] = orphan_count
+                sample_text = ", ".join(
+                    f"{tx_id} ({row_count} row(s))" for tx_id, row_count in samples
+                )
+                report["errors"].append(
+                    f"Orphan records detected in {table_name}: {orphan_count} row(s) "
+                    f"have no matching transaction_manifest. Sample tx_id(s): {sample_text}"
+                )
+
         if not manifests:
-            report["status"] = "EMPTY"
-            report["errors"].append("No transaction manifests exist; no ledger evidence was available to verify.")
+            if not report.get("orphan_records"):
+                report["status"] = "EMPTY"
+                report["errors"].append(
+                    "No transaction manifests exist; no ledger evidence was available to verify."
+                )
             return report
 
-        report["status"] = "VERIFIED"
+        if report["status"] != "CORRUPTED":
+            report["status"] = "VERIFIED"
         for m in manifests:
             tx_id, epoch, nanos, ev_count, st_count, m_hash, m_hmac, key_id, prev_m_hash, root_hash, algo, hmac_v, hash_v = m
             report["manifests_processed"] += 1
