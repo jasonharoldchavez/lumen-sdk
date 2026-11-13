@@ -23,5 +23,5 @@ test("page has a restrictive no-upload content security policy", () => {
 test("file proof uses browser SHA-256 and documents scope", () => {
   assert.ok(html.includes('crypto.subtle.digest("SHA-256"'));
   assert.ok(html.includes("100 * 1024 * 1024"));
-  assert.ok(html.toLowerCase().includes("does not establish who created a file"));
+  assert.ok(html.toLowerCase().includes("does not prove who created the file"));
 });
