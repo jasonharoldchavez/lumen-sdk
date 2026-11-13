@@ -1,0 +1,27 @@
+name: File Proof preview checks
+
+on:
+  pull_request:
+    paths:
+      - "file-proof-site/**"
+      - ".github/workflows/file-proof-checks.yml"
+  push:
+    branches:
+      - file-proof-preview
+    paths:
+      - "file-proof-site/**"
+      - ".github/workflows/file-proof-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run File Proof static checks
+        run: node --test file-proof-site/tests/*.test.mjs
