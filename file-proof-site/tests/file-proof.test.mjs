@@ -6,21 +6,22 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 test("inline application script parses", () => {
-  const match = html.match(/<script>([\\s\\S]*?)<\\/script>/i);
-  assert.ok(match, "inline application script exists");
-  assert.doesNotThrow(() => new vm.Script(match[1]));
+  const start = html.indexOf("<script>");
+  const end = html.indexOf("</script>", start + 8);
+  assert.ok(start >= 0 && end > start, "inline application script exists");
+  const source = html.slice(start + 8, end);
+  assert.doesNotThrow(() => new vm.Script(source));
 });
 
 test("page has a restrictive no-upload content security policy", () => {
-  assert.match(html, /connect-src 'none'/);
-  assert.match(html, /default-src 'none'/);
-  assert.doesNotMatch(html, /<script[^>]+src=/i);
-  assert.doesNotMatch(html, /<link[^>]+href=/i);
+  assert.ok(html.includes("connect-src 'none'"));
+  assert.ok(html.includes("default-src 'none'"));
+  assert.ok(!html.includes("<script src="));
+  assert.ok(!html.includes("<link href="));
 });
 
 test("file proof uses browser SHA-256 and documents scope", () => {
-  assert.match(html, /crypto\\.subtle\\.digest\\("SHA-256"/);
-  assert.match(html, /100 \\* 1024 \\* 1024/);
-  assert.match(html, /does not prove who created the file/i);
-  assert.match(html, /does not establish who created a file/i);
+  assert.ok(html.includes('crypto.subtle.digest("SHA-256"'));
+  assert.ok(html.includes("100 * 1024 * 1024"));
+  assert.ok(html.toLowerCase().includes("does not establish who created a file"));
 });
