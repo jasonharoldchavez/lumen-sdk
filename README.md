@@ -1,309 +1,104 @@
 # Lumen SDK
 
-## Verifiable Event Ledger and Integrity Framework
+## Current status
 
-Lumen SDK is a cryptographic integrity toolkit for building auditable data systems. It provides immutable event journaling, Merkle verification, forensic auditing, and validation workflows for applications that require trustworthy data history.
+Lumen SDK is an **early-stage Python toolkit for hashing and checking the integrity of locally stored event-ledger records**. The current installable package exposes three components:
 
----
+- `MerkleTreeEngine`: computes a Merkle root from caller-supplied hexadecimal leaf hashes.
+- `SQLiteLedgerEngine`: initializes and writes the SQLite ledger schema, provides cryptographic signing helpers, and saves explicitly assembled transaction batches.
+- `ForensicAuditVerifier`: checks manifests and associated journal, state-history, and causal-manifold records, including orphan-record detection.
 
-## Overview
-
-Lumen SDK provides a foundation for systems that need to prove data integrity, detect unauthorized changes, and maintain verifiable records.
-
-The framework combines:
-
-- Cryptographic event journaling
-- Transaction manifests
-- Merkle tree verification
-- HMAC authentication
-- Forensic ledger auditing
-- Telemetry integrity validation
-
----
-
-## Features
-
-### Cryptographic Ledger
-
-- Immutable event records
-- SHA-256 integrity hashing
-- HMAC-based authentication
-- Transaction manifest validation
-- Event lineage tracking
-- Historical state preservation
-
-### Verification Engine
-
-- Merkle root calculation
-- Merkle integrity validation
-- Corruption detection
-- Chain fracture detection
-- Manifest authentication checks
-- Event seal verification
-
-### Testing Framework
-
-Lumen SDK includes validation tooling for:
-
-- Sequential scale testing
-- Blind corruption testing
-- Adversarial modification testing
-- Chaos testing
-- Resiliency testing
-- Multi-node replication experiments
-
----
+The package is under active engineering review. Do not treat it as a complete production ledger, a distributed consensus system, a compliance product, or a security certification.
 
 ## Installation
 
-Install from PyPI:
+```bash
+python -m pip install lumen-sdk
+```
 
-    pip install lumen-sdk
+The current project metadata declares version `0.5.0` and Python `>=3.10`.
 
-For development:
+## Quick start: Merkle root
 
-    python3 -m pip install -e .
+This example demonstrates the Merkle helper only. It does not create a ledger, authenticate data, or prove that source events are truthful.
 
-## Quick Example
-
+```python
+import hashlib
 from lumen import MerkleTreeEngine
 
-events = [
-    "a"*64,
-    "b"*64,
-    "c"*64
-]
-
-root = MerkleTreeEngine.compute_root(events)
+events = [b"event one", b"event two", b"event three"]
+leaf_hashes = [hashlib.sha256(event).hexdigest() for event in events]
+root = MerkleTreeEngine.compute_root(leaf_hashes)
 
 print(root)
+```
 
----
+## SQLite ledger API
 
-## Package Validation
+The low-level ledger API requires the application to supply a key-provider object with a `get_key_material(key_id)` method. The application is responsible for secure key generation, storage, access control, rotation, and backup.
 
-The installable SDK package has been verified:
+The current write interface is deliberately explicit: callers must assemble and authenticate manifest, journal, state, and optional manifold records before calling `save_compliance_batch_explicit(...)`. This release does **not** provide a high-level event-ingestion API that automatically performs that entire workflow.
 
-Lumen SDK import OK
+A minimal initialization shape is:
 
-Merkle root generation successful
+```python
+import asyncio
+from lumen import SQLiteLedgerEngine
 
-Installed package validation OK
+class KeyProvider:
+    def get_key_material(self, key_id: str) -> bytes:
+        # Replace with a real secret-management integration.
+        # Never hard-code production keys in application source.
+        raise NotImplementedError
 
----
+async def main():
+    ledger = SQLiteLedgerEngine("ledger.sqlite3", KeyProvider())
+    try:
+        await ledger.initialize()
+        # Assemble and authenticate records using the documented low-level
+        # API before writing a transaction batch.
+    finally:
+        await ledger.close()
 
-## Project Structure
+asyncio.run(main())
+```
 
-lumen-sdk/
+The placeholder key provider intentionally cannot write authenticated records until the application implements secure key retrieval.
 
-├── lumen/
-│   ├── __init__.py
-│   ├── sqlite_engine.py
-│   ├── merkle.py
-│   └── verifier.py
+## What is included in the Python distribution
 
-├── core/
-│   ├── sqlite_engine.py
-│   ├── merkle.py
-│   ├── verifier.py
-│   └── network components
+The configured package discovery includes the `lumen` Python package. The repository also contains a separate `core/` directory with prototype scripts and network experiments; those files are **not included as importable modules in the published `lumen-sdk` distribution** under the current package configuration.
 
-├── examples/
-│   └── nasa_telemetry_test.py
+Do not assume that installing `lumen-sdk` installs or enables the separate network experiments.
 
-├── tests/
-│   ├── scale_test.py
-│   ├── blind_test.py
-│   ├── chaos_test.py
-│   ├── resiliency_test.py
-│   └── final_blind_test.py
+## Integrity model and limitations
 
-├── pyproject.toml
+The implementation uses SHA-256 hashing and HMAC authentication with caller-provided key material. Merkle roots summarize the supplied leaf hashes. The verifier checks recorded relationships and authentication values against the records and keys available to it.
 
-└── README.md
+These mechanisms can help detect certain changes to records when the verifier has trustworthy keys and a trustworthy reference point. They do not, by themselves:
 
----
+- prove that incoming measurements or events were true;
+- prove who originally created an event;
+- provide trusted timestamps;
+- prevent a privileged attacker from replacing the database and all reference values;
+- provide external anchoring, consensus, or distributed fault tolerance;
+- guarantee immutability or prevent all attacks;
+- provide regulatory compliance or security certification.
 
-## Validation Results
+The current implementation and threat model remain under review. Concurrency, crash recovery, backup/restore, key lifecycle, whole-ledger replacement, and deployment security must be independently evaluated before production use.
 
-Lumen SDK has been tested with:
+## Tests
 
-- Ledger creation tests
-- 100+ block integrity validation
-- Blind forensic audits
-- Artificial corruption injection
-- Chain integrity verification
-- External telemetry validation
-
----
-
-## Telemetry Integrity Validation
-
-Lumen SDK was validated using NASA Telemanom telemetry data as an external telemetry source.
-
-The validation demonstrated:
-
-- Telemetry event ingestion
-- Cryptographic event recording
-- Merkle integrity generation
-- Ledger chain verification
-- Forensic audit validation
-
-Result:
-
-Status: VERIFIED
-
-Manifests processed: 1
-
-Errors: []
-
-## Security Model
-
-Lumen SDK uses:
-
-- Cryptographic hashing
-- HMAC verification
-- Merkle integrity proofs
-- Immutable event ordering
-- Manifest authentication
-- Forensic auditing
-
-Designed to detect:
-
-- Modified records
-- Invalid event seals
-- Broken transaction chains
-- Unauthorized data changes
-- Ledger corruption
-
----
-
-## Release History
-
-### v0.1.0
-
-Initial release:
-
-- Ledger engine
-- Merkle verification
-- Validation suite
-- Network layer
-
-### v0.2.0-nasa-validation
-
-Added:
-
-- NASA Telemanom validation benchmark
-- External telemetry testing
-
-### v0.3.0-sdk-structure
-
-Added:
-
-- Organized SDK structure
-- Examples directory
-- Validation test organization
-
-### v0.4.0-package-ready
-
-Added:
-
-- Installable Python package
-- Package exports
-- Editable installation support
-
----
-
-
-### v0.4.1-package-fix
-Added:
-- Fixed package discovery configuration
-- Improved package distribution compatibility
-
-### v0.5.0
-Added:
-- Corrected SDK usage examples
-- Verified package installation workflow
-- Prepared release package artifacts
-
-
-## Limitations
-
-Lumen SDK is an integrity verification toolkit.
-
-It provides:
-
-- Data integrity validation
-- Audit verification
-- Tamper detection mechanisms
-
-It does not provide:
-
-- Guaranteed prevention of all attacks
-- Automatic compliance certification
-- Managed hosting
-- Included support services unless separately provided
+The repository contains assertion-based verifier regression tests and additional historical validation/demo scripts. Passing a demo script is not equivalent to proving every advertised property. See the GitHub Actions workflows and test files for the exact checks currently run.
 
 ## Licensing
 
-Lumen SDK uses a dual license model.
+The repository includes an Apache License 2.0 `LICENSE` and a separate `COMMERCIAL_LICENSE.md`. The exact legal effect and compatibility of the proposed dual-licensing language have not been independently reviewed. Review the license texts and obtain legal advice before relying on any commercial licensing interpretation.
 
-Open source use:
-- Apache License 2.0
+## Development status
 
-Commercial use:
-- Commercial licensing is available for organizations requiring additional rights or commercial deployment terms.
+This project is being audited and improved. The published `0.5.0` package should be treated as an early-stage release, not as a claim that all repository experiments or advertised capabilities are production-ready.
 
-See:
-- LICENSE
-- COMMERCIAL_LICENSE.md
-- NOTICE
+## Project
 
-
-## Commercial Use
-
-Lumen SDK is available under a dual license model.
-
-The Apache License 2.0 license supports open source usage.
-
-Commercial licensing is available for organizations requiring:
-- proprietary deployment rights
-- commercial integration terms
-- additional licensing permissions
-
-Contact the project owner for commercial licensing inquiries.
-
-## Development Status
-
-Active development.
-
-Lumen SDK is being developed as a foundation for verifiable, auditable, integrity-focused data systems.
-
----
-
-## Author
-
-Jason Chavez
-
-## Quick Start
-
-Install:
-
-    pip install lumen-sdk
-
-Verify:
-
-    python -c "import lumen; print("Lumen import OK")"
-
-## Quick Demo
-
-Run:
-
-    python examples/quick_demo.py
-
-Example output:
-
-    Lumen SDK Demo
-    Merkle Root:
-    07c15d587bff44a7c8da8b38a67f5e9d056dbdc929a35ca449092d918c3ad34d
-
+Repository: https://github.com/jasonharoldchavez/lumen-sdk
